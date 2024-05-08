@@ -24,8 +24,9 @@ module DMem(
 input clk,
 input MemRead,MemWrite,
 input[31:0]addr,
-input[31:0]din,//Data in,Ğ´ÈëµÄÊı¾İ
-output[31:0]dout);//Data out,¶Á³öµÄÊı¾İ
+input[31:0]data_in,//Data in,å†™å…¥çš„æ•°æ®
+output[31:0]data_out);//Data out,è¯»å‡ºçš„æ•°æ®
 
-RAM udram(.clka(clk),.wea(MemWrite),.addra(addr[13:0]),.dina(din),.douta(dout));
+RAM udram(.clka(clk),.wea(MemWrite),.addra(addr[13:0]),.dina(data_in),.douta(data_out));
 endmodule
+
