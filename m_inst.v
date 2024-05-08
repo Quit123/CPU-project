@@ -22,8 +22,10 @@
 
 module m_inst(
 input clk,
-input[13:0]addr,
-output[31:0]dout
+input[31:0] PC,
+output[31:0] Instruction
     );
-    prgrom urom(.clka(clk), .addra(addr), .douta(dout));
+    wire addr;
+    assign addr = PC[15:2];
+    prgrom urom(.clka(clk), .addra(addr), .douta(Instruction));
 endmodule
