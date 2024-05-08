@@ -32,7 +32,7 @@ module Controller(
     output ALUSrc,
     output RegWrite,
     
-    output reg MemorIOtoReg, // 1 indicates that data needs to be read from memory or I/O to the register
+    output reg MemOrIOtoReg, // 1 indicates that data needs to be read from memory or I/O to the register
     output reg IORead, // 1 indicates I/O read
     output reg IOWrite // 1 indicates I/O write
     );
@@ -43,59 +43,10 @@ module Controller(
     assign RegWrite = (opcode == 7'b011_0011 || opcode == 7'b000_0011 || opcode == 7'b001_0011) ? 1'b1 : 1'b0;
     assign ALUOp = (opcode == 7'b011_0011 || opcode == 7'b001_0011) ? 2'b10 :
                    (opcode == 7'b000_0011 || opcode == 7'b010_0011) ? 2'b00 :
-                   (opcode == 7'b110_0011) ? 2'b01 : 2'b11;//11Œﬁ“‚“Â
+                   (opcode == 7'b110_0011) ? 2'b01 : 2'b11;//11Êó†ÊÑè‰πâ
     assign ALUSrc = (opcode == 7'b000_0011 || opcode == 7'b001_0011 || opcode == 7'b00_0011) ? 1'b1 : 1'b0;
 endmodule
-    /*always @(opcode) begin
-    case (opcode)
-        7'b011_0011:begin//R
-        Branch <= 1'b0;
-        MemWrite <= 1'b0;
-        MemRead <= 1'b0;
-        MemtoReg <= 1'b0;
-        RegWrite <= 1'b1;
-        ALUOp <= 2'b10;
-        ALUSrc <= 1'b0;
-        end
-        7'b000_0011:begin//I LW
-        Branch <= 1'b0;
-        MemWrite <= 1'b0;
-        MemRead <= 1'b1;
-        MemtoReg <= 1'b1;
-        RegWrite <= 1'b1;
-        ALUOp <= 2'b00;
-        ALUSrc <= 1'b1;
-        end
-        7'b001_0011:begin//I ADDI
-        Branch <= 1'b0;
-        MemWrite <= 1'b0;
-        MemRead <= 1'b0;
-        MemtoReg <= 1'b0;
-        RegWrite <= 1'b1;
-        ALUOp <= 2'b10;
-        ALUSrc <= 1'b1;
-        end
-        7'b010_0011:begin//S
-        Branch <= 1'b0;
-        MemWrite <= 1'b1;
-        MemRead <= 1'b0;
-        MemtoReg <= 1'b0;
-        RegWrite <= 1'b0;
-        ALUOp <= 2'b00;
-        ALUSrc <= 1'b1;
-        end
-        7'b110_0011:begin//SB
-        Branch <= 1'b1;
-        MemWrite <= 1'b0;
-        MemRead <= 1'b0;
-        MemtoReg <= 1'b0;
-        RegWrite <= 1'b0;
-        ALUOp <= 2'b01;
-        ALUSrc <= 1'b0;
-        end
-    endcase
-end*/
-            /*7'b001_0111, 7'b011_0111:begin//U aupic°¢lui
+            /*7'b001_0111, 7'b011_0111:begin//U aupic„ÄÅlui
             Branch = 1'b0;
             MemRead = 1'b0;
             MemtoReg = 1'b0;
