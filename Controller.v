@@ -32,9 +32,9 @@ module Controller(
     output ALUSrc,
     output RegWrite,
     
-    output reg MemOrIOtoReg, // 1 indicates that data needs to be read from memory or I/O to the register
-    output reg IORead, // 1 indicates I/O read
-    output reg IOWrite // 1 indicates I/O write
+    output MemOrIOtoReg, // 1 indicates that data needs to be read from memory or I/O to the register
+    output IORead, // 1 indicates I/O read
+    output IOWrite // 1 indicates I/O write
     );
     assign Branch = (opcode == 7'b110_0011) ? 1'b1 : 1'b0;
     assign MemWrite = (opcode == 7'b010_0011) ? 1'b1 : 1'b0;
@@ -45,6 +45,11 @@ module Controller(
                    (opcode == 7'b000_0011 || opcode == 7'b010_0011) ? 2'b00 :
                    (opcode == 7'b110_0011) ? 2'b01 : 2'b11;//11无意义
     assign ALUSrc = (opcode == 7'b000_0011 || opcode == 7'b001_0011 || opcode == 7'b00_0011) ? 1'b1 : 1'b0;
+    
+    assign IORead = (opcode == 7'b0000011 && Alu_resultHigh == 22'b1111_1111_1111_1111_1111_11);
+    assign IOWrite = (opcode == 7'b0100011 && Alu_resultHigh == 22'b1111_1111_1111_1111_1111_11);
+    assign MemOrIOtoReg = IORead || IOWrite;
+    
 endmodule
             /*7'b001_0111, 7'b011_0111:begin//U aupic、lui
             Branch = 1'b0;
