@@ -26,11 +26,16 @@ input rst,
 input[2:0] test_index,
 input reset,
 input[15:0] io_read_dataP5R1,//开关输入数据,暂时一个开关控制绑两个bit
+input ledwrite,//现暂定有button控制开关
 output[7:0] ledF4R2,//拨动开关亮灯
 output[31:0] digital,//MemOrIO中的write_data，用来显示十六进制
 output check//测试场景1的011-111结果显示
     );
     reg cpu_clk;
+    //leds
+    wire[1:0] ledaddr;
+    //IOread
+    wire[15:0] io_read_data;
     //m_inst
     reg[31:0] PC;//instruction_address
     wire[31:0] Instruction;
@@ -45,6 +50,10 @@ output check//测试场景1的011-111结果显示
     wire MemOrIOtoReg;
     wire IORead;
     wire IOWrite;
+    wire basic_cal_type;//add,sub,and,or,addi
+    wire l_type;//lw
+    wire s_type;//sw
+    wire b_type;//beq
     //Decoder
     wire[31:0] data_to_reg;//mem或io设备向register中写数据（lw）
     wire[31:0] imm32;
@@ -67,22 +76,34 @@ output check//测试场景1的011-111结果显示
 
     assign digital = write_data;
     cpuclk Clk(.clk_in1(clk),.clk_out1(cpu_clk));
+    
+    Leds leds(.ledrst(rst),.ledclk(cpu_clk),.ledwrite(ledwrite),
+            .ledcs(LEDCtrl),.ledaddr(2'b00),
+            .ledwdata(write_data[15:0]),.ledout(ledF4R2));//先暂定2'b00，已设wire ledaddr
+                                                          //先暂定是write_data，之后会有register向外的数据
+    
+    IOread ioread(.reset(rst),.ior(IORead),
+                .switchctrl(SwitchCtrl),.ioread_data_switch(io_read_dataP5R1),
+                .ioread_data(io_read_data));
     //这里进行修改，进行选择然后放入strand_PC
     //wire strand_PC;
     //assign strand_PC = 
     //执行顺序：sel_instruction -> ana_function(controller) -> read_data(decoder) -> cal(ALU) -> convey_data_to_memOrIO(MemOrIO) -> convey_data_to_mem(dmem)
     //                                                                    <---------convey_data_to_register-------
-    m_inst instruction(.clk(cpu_clk),.PC(PC),
+    
+    Ana_Instruction instruction(.clk(cpu_clk),.reset(reset),.Branch(Branch),
+                        .zero(zero),.ALU_result(ALU_result),
                         .Instruction(Instruction));
-                        
+    
     Controller con(.Alu_resultHigh(ALU_result[31:10]),.opcode(Instruction[6:0]),
                     .Branch(Branch),.MemRead(MemRead),
                     .MemtoReg(MemtoReg),.ALUOp(ALUOp),
                     .MemWrite(MemWrite),.ALUSrc(ALUSrc),
                     .RegWrite(RegWrite),.MemOrIOtoReg(MemOrIOtoReg),
-                    .IORead(IORead),.IOWrite(IOWrite));
-                    
-    Decoder decoder(.reset(reset),.Instruction(Instruction),
+                    .IORead(IORead),.IOWrite(IOWrite),.basic_cal_type(basic_cal_type),
+                    .l_type(l_type),.s_type(s_type),.b_type(b_type));
+    
+    Decoder decoder(.clk(cpu_clk),.reset(reset),.Instruction(Instruction),
                     .RegWrite(RegWrite),.data_to_reg(data_to_reg),
                     .imm32(imm32),.funct3(funct3),.funct7(funct7),
                     .read_data1(read_data1),.read_data2(read_data2));
@@ -95,15 +116,12 @@ output check//测试场景1的011-111结果显示
     MemOrIO mem_or_io(.MemRead(MemRead),.MemWrite(MemWrite),
                     .IORead(IORead),.IOWrite(IOWrite),
                     .addr_in(ALU_result),.addr_out(mem_addr),
-                    .mem_read_data(mem_data_out),.io_read_data(io_read_dataP5R1),
+                    .mem_read_data(mem_data_out),.io_read_data(io_read_data),
                     .rdata(data_to_reg),.register_read_data(read_data1),
                     .write_data(write_data),.LEDCtrl(LEDCtrl),
                     .SwitchCtrl(SwitchCtrl),.DigitalCtrl(DigitalCtrl));
     
     DMem data_mem(.clk(cpu_clk),.MemRead(MemRead),.MemWrite(MemWrite),
                 .addr(mem_addr),.data_in(mem_data_in),.data_out(mem_data_out));
-    
-    always@(posedge reset)begin
-    PC <= 32'h0000_0000;
-    end
+
 endmodule
