@@ -22,11 +22,16 @@
 
 module DMem(
 input clk,
-input MemRead,MemWrite,
+input MemRead,//lw
+input MemWrite,//sw
 input[31:0]addr,
 input[31:0]data_in,//Data in,写入的数据
 output[31:0]data_out);//Data out,读出的数据
-
-RAM udram(.clka(clk),.wea(MemWrite),.addra(addr[13:0]),.dina(data_in),.douta(data_out));
+wire allow;
+wire exp_data_out;
+wire exp_data_in;
+assign allow = MemRead || MemWrite;
+RAM udram(.clka(clk),.wea(allow),.addra(addr[13:0]),.dina(exp_data_in),.douta(exp_data_out));
+assign data_in = MemWrite ? exp_data_in : 32'h0000_0000;
+assign data_out = MemRead ? exp_data_out : 32'h0000_0000;
 endmodule
-
