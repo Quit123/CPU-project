@@ -28,12 +28,14 @@ input reset,
 input[15:0] io_read_dataP5R1,//开关输入数据,暂时一个开关控制绑两个bit
 input ledwrite,//现暂定有button控制开关
 output[7:0] ledF4R2,//拨动开关亮灯
-output[31:0] digital,//MemOrIO中的write_data，用来显示十六进制
+output[31:0] digital_tube,//MemOrIO中的write_data，用来显示十六进制
 output check//测试场景1的011-111结果显示
     );
     reg cpu_clk;
     //leds
     wire[1:0] ledaddr;
+    //digital
+    wire dagital;
     //IOread
     wire[15:0] io_read_data;
     //m_inst
@@ -74,7 +76,7 @@ output check//测试场景1的011-111结果显示
     //DMem
     wire mem_data_in;//向data mem写入的数据
 
-    assign digital = write_data;
+    assign dagital = write_data;
     cpuclk Clk(.clk_in1(clk),.clk_out1(cpu_clk));
     
     Leds leds(.ledrst(rst),.ledclk(cpu_clk),.ledwrite(ledwrite),
