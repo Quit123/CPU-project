@@ -35,7 +35,7 @@ output check//测试场景1的011-111结果显示
     //leds
     wire[1:0] ledaddr;
     //digital
-    wire dagital;
+    wire[31:0] dagital;
     //IOread
     wire[15:0] io_read_data;
     //m_inst
