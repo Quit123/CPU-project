@@ -25,11 +25,12 @@ input clk,
 input rst,
 input[2:0] test_index,
 input reset,
-input[15:0] io_read_dataP5R1,//å¼€å…³è¾“å…¥æ•°æ®,æš‚æ—¶ä¸€ä¸ªå¼€å…³æŽ§åˆ¶ç»‘ä¸¤ä¸ªbit
-input ledwrite,//çŽ°æš‚å®šæœ‰buttonæŽ§åˆ¶å¼€å…³
-output[7:0] ledF4R2,//æ‹¨åŠ¨å¼€å…³äº®ç¯
-output[31:0] digital_tube,//MemOrIOä¸­çš„write_dataï¼Œç”¨æ¥æ˜¾ç¤ºåå…­è¿›åˆ¶
-output check//æµ‹è¯•åœºæ™¯1çš„011-111ç»“æžœæ˜¾ç¤º
+input[15:0] io_read_dataP5R1,//¿ª¹ØÊäÈëÊý¾Ý,ÔÝÊ±Ò»¸ö¿ª¹Ø¿ØÖÆ°óÁ½¸öbit
+input ledwrite,//ÏÖÔÝ¶¨ÓÐbutton¿ØÖÆ¿ª¹Ø
+output[7:0] ledF4R2,//²¦¶¯¿ª¹ØÁÁµÆ
+output[31:0] digital_tube,//MemOrIOÖÐµÄwrite_data£¬ÓÃÀ´ÏÔÊ¾Ê®Áù½øÖÆ
+output[7:0] digital,
+output check//²âÊÔ³¡¾°1µÄ011-111½á¹ûÏÔÊ¾
     );
     reg cpu_clk;
     //leds
@@ -57,7 +58,7 @@ output check//æµ‹è¯•åœºæ™¯1çš„011-111ç»“æžœæ˜¾ç¤º
     wire s_type;//sw
     wire b_type;//beq
     //Decoder
-    wire[31:0] data_to_reg;//memæˆ–ioè®¾å¤‡å‘registerä¸­å†™æ•°æ®ï¼ˆlwï¼‰
+    wire[31:0] data_to_reg;//mem»òioÉè±¸ÏòregisterÖÐÐ´Êý¾Ý£¨lw£©
     wire[31:0] imm32;
     wire[2:0] funct3;
     wire[6:0] funct7;
@@ -68,29 +69,29 @@ output check//æµ‹è¯•åœºæ™¯1çš„011-111ç»“æžœæ˜¾ç¤º
     wire[31:0] ALU_result;
     //MemOrIO
     reg[31:0] mem_addr;//mem_address
-    wire mem_data_out;//data memè¾“å‡ºçš„æ•°æ®
+    wire mem_data_out;//data memÊä³öµÄÊý¾Ý
     wire[31:0] write_data;
-    wire LEDCtrl;//ç”¨äºŽæŽ§åˆ¶LEDç¯æ˜¯å¦ä¼šäº® == 1'b1æ‹¨åŠ¨å¼€å…³ledç¯æ‰ä¼šäº®
-    wire SwitchCtrl;//ç”¨äºŽæŽ§åˆ¶å¼€å…³è¾“å…¥ä¿¡æ¯æ˜¯å¦æœ‰æ•ˆ == 1'b1æ‰èƒ½æœ‰æ•ˆæ‹¨åŠ¨å¼€å…³
-    wire DigitalCtrl;//yç”¨äºŽæŽ§åˆ¶æ•°ç ç®¡æ˜¯å¦ä¼šäº®
+    wire LEDCtrl;//ÓÃÓÚ¿ØÖÆLEDµÆÊÇ·ñ»áÁÁ == 1'b1²¦¶¯¿ª¹ØledµÆ²Å»áÁÁ
+    wire SwitchCtrl;//ÓÃÓÚ¿ØÖÆ¿ª¹ØÊäÈëÐÅÏ¢ÊÇ·ñÓÐÐ§ == 1'b1²ÅÄÜÓÐÐ§²¦¶¯¿ª¹Ø
+    wire DigitalCtrl;//yÓÃÓÚ¿ØÖÆÊýÂë¹ÜÊÇ·ñ»áÁÁ
     //DMem
-    wire mem_data_in;//å‘data memå†™å…¥çš„æ•°æ®
+    wire mem_data_in;//Ïòdata memÐ´ÈëµÄÊý¾Ý
 
     assign dagital = write_data;
     cpuclk Clk(.clk_in1(clk),.clk_out1(cpu_clk));
     
     Leds leds(.ledrst(rst),.ledclk(cpu_clk),.ledwrite(ledwrite),
             .ledcs(LEDCtrl),.ledaddr(2'b00),
-            .ledwdata(write_data[15:0]),.ledout(ledF4R2));//å…ˆæš‚å®š2'b00ï¼Œå·²è®¾wire ledaddr
-                                                          //å…ˆæš‚å®šæ˜¯write_dataï¼Œä¹‹åŽä¼šæœ‰registerå‘å¤–çš„æ•°æ®
+            .ledwdata(write_data[15:0]),.ledout(ledF4R2));//ÏÈÔÝ¶¨2'b00£¬ÒÑÉèwire ledaddr
+                                                          //ÏÈÔÝ¶¨ÊÇwrite_data£¬Ö®ºó»áÓÐregisterÏòÍâµÄÊý¾Ý
     
     IOread ioread(.reset(rst),.ior(IORead),
                 .switchctrl(SwitchCtrl),.ioread_data_switch(io_read_dataP5R1),
                 .ioread_data(io_read_data));
-    //è¿™é‡Œè¿›è¡Œä¿®æ”¹ï¼Œè¿›è¡Œé€‰æ‹©ç„¶åŽæ”¾å…¥strand_PC
+    //ÕâÀï½øÐÐÐÞ¸Ä£¬½øÐÐÑ¡ÔñÈ»ºó·ÅÈëstrand_PC
     //wire strand_PC;
     //assign strand_PC = 
-    //æ‰§è¡Œé¡ºåºï¼šsel_instruction -> ana_function(controller) -> read_data(decoder) -> cal(ALU) -> convey_data_to_memOrIO(MemOrIO) -> convey_data_to_mem(dmem)
+    //Ö´ÐÐË³Ðò£ºsel_instruction -> ana_function(controller) -> read_data(decoder) -> cal(ALU) -> convey_data_to_memOrIO(MemOrIO) -> convey_data_to_mem(dmem)
     //                                                                    <---------convey_data_to_register-------
     
     Ana_Instruction instruction(.clk(cpu_clk),.reset(reset),.Branch(Branch),
