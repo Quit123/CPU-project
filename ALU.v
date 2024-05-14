@@ -28,6 +28,7 @@ input[1:0] ALUOp,
 input[2:0] funct3,
 input[6:0] funct7,
 input ALUSrc,
+input[6:0] opcode,
 output[31:0] ALU_result,
 output zero,
 output check
@@ -62,7 +63,7 @@ output check
                         (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b0)) ? 4'b0010 ://00 -> load|store 10 -> add
                         (ALUOp == 2'b10 && funct3 == 3'b111) ? 4'b0000 ://and
                         (ALUOp == 2'b10 && funct3 == 3'b110) ? 4'b0001 ://or
-                        4'b0000;
+                        4'b1111;
      
      always@(read_data1, operand2, ALUControl) begin
         case(ALUControl)
@@ -84,16 +85,18 @@ output check
      
      assign check = (blt == 1'b1 || bge == 1'b1 || bltu == 1'b1 || bgeu == 1'b1) ? 1'b1 : 1'b0;
      
-     assign zero = (ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) || //beq
+     assign zero = ((ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) || //beq
                 (funct3 == 3'b001 && ALU_mux != 32'h0000_0000) || //bne
                 (funct3 == 3'b100 && blt == 1'b1) || //blt
                 (funct3 == 3'b101 && bge == 1'b1) || //bge
                 (funct3 == 3'b110 && bltu == 1'b1) || //bltu
-                (funct3 == 3'b111 && bgeu == 1'b1))) ? 1'b1 : 1'b0;//bgeu
-     assign ALU_result = (ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) ||
+                (funct3 == 3'b111 && bgeu == 1'b1)))) ||//bgeu
+                opcode == 7'b110_1111 ? 1'b1 : 1'b0;//jal(j)
+     assign ALU_result = ((ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) ||//beq
                         (funct3 == 3'b001 && ALU_mux != 32'h0000_0000) || //bne
                         (funct3 == 3'b100 && blt == 1'b1) || //blt
                         (funct3 == 3'b101 && bge == 1'b1) || //bge
                         (funct3 == 3'b110 && bltu == 1'b1) || //bltu
-                        (funct3 == 3'b111 && bgeu == 1'b1))) ? imm32 : ALU_mux;//bgeu
+                        (funct3 == 3'b111 && bgeu == 1'b1)))) || //bgeu
+                        opcode == 7'b110_1111 ? imm32 : ALU_mux;//lw这里没有问题（就是ALU_mux）//jal(j)
 endmodule

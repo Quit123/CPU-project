@@ -25,37 +25,24 @@ module digital(
     input IOWrite,
     input clk,
     input rst,
-    input[7:0] io_read_dataP5R1, //绑8位端口
+    input[15:0] io_read_dataP5R1, //绑8位端口
     //input [31:0] dagital, //digital没有绑端口，所以先注掉了
-    output[7:0] seg,//段选，高有效
-    output[7:0] seg1,
-    output[7:0] an //位选，低有效
+    output reg [7:0] seg,//段选，高有效
+    output reg [7:0] seg1,
+    output reg [7:0] an //位选，低有效
     );
     reg[18:0] divclk_cnt = 0;//分频计数器
     reg divclk = 0;//分频后的时钟
-    reg [15:0]iodata_16bit;
     reg [31:0]digital_tube;
     reg [31:0]dagital =32'b0;   //digital暂时赋的值
-    reg [7:0] seg=0;//段码
-    reg [7:0] seg1=0;
-    reg [7:0] an=8'b00000000;//位码
     reg[3:0] disp_dat=0;//要显示的数据
     reg[2:0] disp_bit=0;//要显示的位
     parameter maxcnt = 50000;// 周期：50000*2/100M
     always@(posedge clk)
     begin
-    iodata_16bit={
-        io_read_dataP5R1[7],io_read_dataP5R1[7],
-        io_read_dataP5R1[6],io_read_dataP5R1[6],
-        io_read_dataP5R1[5],io_read_dataP5R1[5],
-        io_read_dataP5R1[4],io_read_dataP5R1[4],
-        io_read_dataP5R1[3],io_read_dataP5R1[3],
-        io_read_dataP5R1[2],io_read_dataP5R1[2],
-        io_read_dataP5R1[1],io_read_dataP5R1[1],
-        io_read_dataP5R1[0],io_read_dataP5R1[0]};
-    //digital_tube = {16'b0, io_read_dataP5R1};
+    
         if (SwitchCtrl) begin
-            digital_tube = {16'b0, iodata_16bit};
+            digital_tube = {16'b0, io_read_dataP5R1};
         end else if (!SwitchCtrl && IOWrite) begin
             digital_tube = dagital;
         end else begin
