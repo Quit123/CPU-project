@@ -49,10 +49,23 @@ module MemOrIO(
     assign addr_out = addr_in;//传入地址等于传出地址
     assign rdata = (MemRead == 1'b1) ? mem_read_data ://(lw)mem向register,这里需要对lb的类型进行修改
                    (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)io向寄存器
-    assign write_data = (MemWrite == 1'b1) ? register_read_data ://(sw)
-                        (IOWrite_singal == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//(sw)向mem或io输入信息
+    assign write_data = (MemWrite == 1'b1 || IOWrite_singal == 1'b1) ? register_read_data : 32'hffffffff;//好像没有必要前16bit是0，iooutput为什么一定要是0呢(sw)向mem或io输入信息
     assign LEDCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)led的显示输出
     assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)拨动开关输入
     assign DigitalCtrl = IORead_singal || IOWrite_singal;
 endmodule
+
+/*
+    reg data;
+assign addr_out = addr_in;//传入地址等于传出地址
+assign rdata = (MemRead == 1'b1) ? mem_read_data ://(lw)mem向register,这里需要对lb的类型进行修改
+               (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)io向寄存器
+assign write_data = (MemWrite == 1'b1) ? register_read_data ://(sw)
+                    (IOWrite_singal == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//好像没有必要前16bit是0，iooutput为什么一定要是0呢(sw)向mem或io输入信息
+assign LEDCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)led的显示输出
+assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)拨动开关输入
+assign DigitalCtrl = IORead_singal || IOWrite_singal;
+endmodule
+
+*/
 
