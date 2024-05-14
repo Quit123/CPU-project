@@ -27,7 +27,10 @@ input[2:0] test_index,
 input[15:0] io_read_dataP5R1,//开关输入数据,暂时一个开关控制绑两个bit
 //input ledwrite,//现暂定有button控制开关
 output[7:0] ledF4R2,//拨动开关亮灯
-output[31:0] digital_tube,//MemOrIO中的write_data，用来显示十六进制
+output[7:0] seg,
+output[7:0] seg1,
+output[7:0] an,
+//output[31:0] digital_tube,//MemOrIO中的write_data，用来显示十六进制
 output check//测试场景1的011-111结果显示
     );
     wire cpu_clk;
@@ -82,6 +85,10 @@ output check//测试场景1的011-111结果显示
             .ledwdata(write_data[15:0]),.ledout(ledF4R2));//先暂定2'b00，已设wire ledaddr
                                                           //先暂定是write_data，之后会有register向外的数据
     
+    DigitalOut digital_out(.SwitchCtrl(SwitchCtrl),.IOWrite_singal(IOWrite_singal),
+                .clk(clk),.rst(reset),.io_read_dataP5R1(io_read_dataP5R1),
+                .digital(write_data),.seg(seg),.seg1(seg1),.an(an));
+                
     IOread io_read(.reset(reset),.ior(IORead_singal),
                 .switchctrl(SwitchCtrl),.ioread_data_switch(io_read_dataP5R1),
                 .ioread_data(io_read_data));
