@@ -26,8 +26,8 @@ module MemOrIO(
 //2). The destination of r_rdata
     input MemRead, //key-sign -> read memory, from Controller，读出mem
     input MemWrite, //key-sign -> write memory, from Controller，写入mem
-    input IORead, //key-sign -> read IO, from Controller，将数据显示在设备上(lw)
-    input IOWrite, //key-sign -> write IO, from Controller,将数据传入设备(sw)
+    input IORead_singal, //key-sign -> read IO, from Controller，将数据显示在设备上(lw)
+    input IOWrite_singal, //key-sign -> write IO, from Controller,将数据传入设备(sw)
     
     input[31:0] addr_in, // from alu_result in ALU
     output[31:0] addr_out, // address to Data-Memory
@@ -37,8 +37,8 @@ module MemOrIO(
     output[31:0] rdata, // data from mem or io and write into register
     
     input[31:0] register_read_data, // data read from Decoder(register file)
+    
     output [31:0] write_data, // data to memory or I/O（m_wdata, io_wdata）
-                                 //可能也是方便显示灯管信号
     output LEDCtrl, //控制LED信号
     output SwitchCtrl, //控制开关输入信息
     output DigitalCtrl //控制数码管
@@ -48,10 +48,11 @@ module MemOrIO(
     reg data;
     assign addr_out = addr_in;//传入地址等于传出地址
     assign rdata = (MemRead == 1'b1) ? mem_read_data ://(lw)mem向register
-                   (IORead == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)io向寄存器
+                   (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)io向寄存器
     assign write_data = (MemWrite == 1'b1) ? register_read_data ://(sw)
-                        (IOWrite == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//(sw)向mem或io输入信息
-    assign LEDCtrl = (IORead == 1'b1) ? 1'b1 : 1'b0;//(lw)led的显示输出
-    assign SwitchCtrl = (IORead == 1'b1) ? 1'b1 : 1'b0;//(lw)拨动开关输入
-    assign DigitalCtrl = IORead || IOWrite;
+                        (IOWrite_singal == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//(sw)向mem或io输入信息
+    assign LEDCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)led的显示输出
+    assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)拨动开关输入
+    assign DigitalCtrl = IORead_singal || IOWrite_singal;
 endmodule
+
