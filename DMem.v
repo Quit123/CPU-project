@@ -32,6 +32,6 @@ wire exp_data_out;
 wire exp_data_in;
 assign allow = MemRead || MemWrite;
 RAM udram(.clka(clk),.wea(allow),.addra(addr[13:0]),.dina(exp_data_in),.douta(exp_data_out));
-assign data_in = MemWrite ? exp_data_in : 32'h0000_0000;
+assign exp_data_in = MemWrite ? data_in : 32'h0000_0000;
 assign data_out = MemRead ? exp_data_out : 32'h0000_0000;
 endmodule
