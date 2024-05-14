@@ -37,7 +37,7 @@ module Decoder(
     input[31:0] data_to_reg,
     //output shift_mount,//实现sll指令
     //output [11:0] immediate_12,//I|S|SB//实现一些特殊指令
-    output [31:0] imm32,
+    output[31:0] imm32,
     output[2:0] funct3,
     output[6:0] funct7,
     output[31:0] read_data1,
@@ -68,7 +68,13 @@ module Decoder(
         if(reset == 1'b1) begin              // 初始化寄存器组
             for(i=0;i<32;i=i+1) register[i] <= 32'h0000_0000;
         end else if(RegWrite == 1'b1) begin
-            register[return_address] <= data_to_reg;
+            if(funct3 == 3'b100)begin
+                register[return_address] <= {24'h00_0000,data_to_reg[7:0]};//lbu 读取前8位，用0拓展
+            end else if(funct3 == 3'b000) begin
+                register[return_address] <= {{24{data_to_reg[7]}},data_to_reg[7:0]};//lb 读取前8位，符号拓展
+            end else begin
+                register[return_address] <= data_to_reg;//lw
+            end
         end
     end
 endmodule

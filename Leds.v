@@ -21,10 +21,10 @@
 
 
 module Leds (
-    input			ledrst,		// reset, active high (¸´Î»ĞÅºÅ,¸ßµçÆ½ÓĞĞ§)//reset
-    input			led_clk,	// clk for led (Ê±ÖÓĞÅºÅ)//cpu_clk
-    input			ledwrite,	// led write enable, active high (Ğ´ĞÅºÅ,¸ßµçÆ½ÓĞĞ§)//Ò»¸öĞÂbutton£¬°´ÏÂºóled¿ªÊ¼ÁÁ£¿
-    input			ledcs,		// 1 means the leds are selected as output (´ÓmemorioÀ´µÄ£¬ÓÉµÍÖÁ¸ßÎ»ĞÎ³ÉµÄLEDÆ¬Ñ¡ĞÅºÅ)//LEDCtrl
+    input			ledrst,		// reset, active high (å¤ä½ä¿¡å·,é«˜ç”µå¹³æœ‰æ•ˆ)//reset
+    input			led_clk,	// clk for led (æ—¶é’Ÿä¿¡å·)//cpu_clk
+    //input			ledwrite,	// led write enable, active high (å†™ä¿¡å·,é«˜ç”µå¹³æœ‰æ•ˆ)//ä¸€ä¸ªæ–°buttonï¼ŒæŒ‰ä¸‹åledå¼€å§‹äº®ï¼Ÿ
+    input			ledcs,		// 1 means the leds are selected as output (ä»memorioæ¥çš„ï¼Œç”±ä½è‡³é«˜ä½å½¢æˆçš„LEDç‰‡é€‰ä¿¡å·)//LEDCtrl
     input	[1:0]	ledaddr,	// 2'b00 means updata the low 8bits of ledout, 2'b10 means updata the high 8 bits of ledout
     input	[15:0]	ledwdata,	// the data (from register/memorio)  waiting for to be writen to the leds of the board
     output	[7:0]	ledout		// the data writen to the leds  of the board
@@ -37,7 +37,7 @@ module Leds (
         if (ledrst)
             ledout_design <= 24'h000000;
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		else if (ledcs && ledwrite) begin
+		else if (ledcs) begin
 			if (ledaddr == 2'b00)
 				ledout_design[7:0] <= {ledwdata[7:0] };
 			else if (ledaddr == 2'b10 )
