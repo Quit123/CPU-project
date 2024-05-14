@@ -42,6 +42,7 @@ module Decoder(
     output[6:0] funct7,
     output[31:0] read_data1,
     output[31:0] read_data2
+    //output[31:0] zero_num
     );
     integer i;
     wire [6:0] opcode;
