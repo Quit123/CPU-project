@@ -35,9 +35,10 @@ assign imm20 = (instruction[6:0] == 7'b0010111) ? instruction[31:12] ://U-format
                20'h00000;
 assign imm32 = (instruction[6:0] == 7'b0000011) ? {{20{imm12[11]}}, imm12[11:0]} ://(lw)
                (instruction[6:0] == 7'b0010011) ? {{20{imm12[11]}}, imm12[11:0]} ://(addi)
-               (instruction[6:0] == 7'b1100011) ? {{20{imm12[11]}}, imm12[11:5]} ://(beq.bne...)计算的两行之间的差值
-               (instruction[6:0] == 7'b0100011) ? {{19{imm12[11]}}, imm12[11:0], 1'b0} ://(sw)
+               (instruction[6:0] == 7'b1100011) ? {{20{imm12[11]}}, imm12[11:0]} ://(beq.bne...)计算的两行之间的差值
+               (instruction[6:0] == 7'b0100011) ? {{20{imm12[11]}}, imm12[11:0]} ://(sw)
                (instruction[6:0] == 7'b0010111) ? {imm20[19:0], 12'b0} ://no
                (instruction[6:0] == 7'b1101111) ? {{11{imm20[19]}}, imm20[19:0], 1'b0} ://(jal)
                32'h0000_0000;
 endmodule
+//slli在这里也能正常转换成32bit
