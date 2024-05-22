@@ -35,6 +35,9 @@ module Decoder(
     input[31:0] Instruction,
     input RegWrite,
     input[31:0] data_to_reg,
+    input in_button,
+    input decision_button,
+    input out_button,
     //output shift_mount,//实现sll指令
     //output [11:0] immediate_12,//I|S|SB//实现一些特殊指令
     output[31:0] imm32,
@@ -65,8 +68,17 @@ module Decoder(
     assign read_data1 = register[register_address1];
     assign read_data2 = register[register_address2];
     
-    always@(posedge clk)begin
-        if(reset == 1'b1) begin              // 初始化寄存器组
+    always@(posedge clk, negedge reset)begin
+        if(in_button == 1'b1)begin
+            register[5'b10110] <= 32'h0000_0001;
+        end
+        if(decision_button == 1'b1)begin
+            register[5'b10111] <= 32'h0000_0001;
+        end
+        if(out_button == 1'b1)begin
+            register[5'b10101] <= 32'h0000_0001;
+        end
+        if(reset == 1'b0) begin              // 初始化寄存器组
             for(i=0;i<32;i=i+1) register[i] <= 32'h0000_0000;
         end else if(RegWrite == 1'b1) begin
             if(funct3 == 3'b100)begin
