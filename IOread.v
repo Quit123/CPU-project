@@ -21,21 +21,21 @@
 
 
 module IOread (
-    input			reset,				// reset, active high ¸´Î»ĞÅºÅ (¸ßµçÆ½ÓĞĞ§)
-	input			ior,				// from Controller, 1 means read from input device(´Ó¿ØÖÆÆ÷À´µÄI/O¶Á)
-    input			switchctrl,			// means the switch is selected as input device (´Ómemorio¾­¹ıµØÖ·¸ß¶ËÏß»ñµÃµÄ²¦Âë¿ª¹ØÄ£¿éÆ¬Ñ¡)
-    input	[15:0]	ioread_data_switch,	// the data from switch(´ÓÍâÉèÀ´µÄ¶ÁÊı¾İ£¬´Ë´¦À´×Ô²¦Âë¿ª¹Ø)
-    output	[15:0]	ioread_data 		// the data to memorio (½«ÍâÉèÀ´µÄÊı¾İËÍ¸ømemorio)
+    input			reset,				// reset, active high å¤ä½ä¿¡å· (é«˜ç”µå¹³æœ‰æ•ˆ)
+	input			ior,				// from Controller, 1 means read from input device(ä»æ§åˆ¶å™¨æ¥çš„I/Oè¯»)
+    input			switchctrl,			// means the switch is selected as input device (ä»memorioç»è¿‡åœ°å€é«˜ç«¯çº¿è·å¾—çš„æ‹¨ç å¼€å…³æ¨¡å—ç‰‡é€‰)
+    input	[15:0]	ioread_data_switch,	// the data from switch(ä»å¤–è®¾æ¥çš„è¯»æ•°æ®ï¼Œæ­¤å¤„æ¥è‡ªæ‹¨ç å¼€å…³)
+    output	[15:0]	ioread_data 		// the data to memorio (å°†å¤–è®¾æ¥çš„æ•°æ®é€ç»™memorio)
 );
     
     reg [15:0] ioread_data_design;
     assign ioread_data = ioread_data_design;
     
     always @* begin
-        if (reset)
+        if (reset == 1'b0)
             ioread_data_design = 16'h0;
-        else if (ior == 1) begin
-            if (switchctrl == 1)
+        else if (ior == 1'b1) begin
+            if (switchctrl == 1'b1)
                 ioread_data_design = ioread_data_switch;
             else
 				ioread_data_design = ioread_data_design;
