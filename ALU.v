@@ -53,28 +53,27 @@ output check
     wire bgeu;
     wire signed [31:0]data1;
     wire signed [31:0]data2;
-    reg [31:0]ALU_mux;
+    wire [31:0]ALU_mux;
     
     assign func7 = funct7[5];
     assign operand2 = (ALUSrc == 1'b1)? imm32 : read_data2;
     
     //assign zero = (ALU_mux == 32'h0000_0000)? 1'b1: 1'b0;
-    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b1)) ? 4'b0110 ://01 -> beq 10 -> sub
-                        (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b0)) ? 4'b0010 ://00 -> load|store 10 -> add
+    //R和实用性I处理区
+    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b1)) ? 4'b0110 ://01 -> beq 10 -> sub（加funct7是因为需要识别sub，同时没有subi）
+                        (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000)) ? 4'b0010 ://00 -> load|store 10 -> add(删除掉funct7是因为有addi的I类型，add指令可以不判断7)
                         (ALUOp == 2'b10 && funct3 == 3'b111) ? 4'b0000 ://and
                         (ALUOp == 2'b10 && funct3 == 3'b110) ? 4'b0001 ://or
                         4'b1111;
+     assign ALU_mux = (ALUControl == 4'b0010) ? read_data1 + operand2 ://下面处理R、一部分I，S，一部分B(beq)
+                    (ALUControl == 4'b0110) ? read_data1 - operand2 :
+                    (ALUControl == 4'b0000) ? read_data1 & operand2 :
+                    (ALUControl == 4'b0001) ? read_data1 | operand2 :
+                    (opcode == 7'b0010011 && funct3 == 3'b001) ? read_data1 << operand2 ://下面处理slli和srli
+                    (opcode == 7'b0010011 && funct3 == 3'b101) ? read_data1 >> operand2 :
+                    32'h00000000;
      
-     always@(read_data1, operand2, ALUControl) begin
-        case(ALUControl)
-            4'b0010: ALU_mux <= read_data1 + operand2;
-            4'b0110: ALU_mux <= read_data1 - operand2;
-            4'b0000: ALU_mux <= read_data1 & operand2;
-            4'b0001: ALU_mux <= read_data1 | operand2;
-        default: ALU_mux <= 32'h00000000;
-        endcase
-     end
-     
+     //B类型处理区
      assign data1 = $signed(read_data1);
      assign data2 = $signed(read_data2);
      
@@ -100,3 +99,23 @@ output check
                         (funct3 == 3'b111 && bgeu == 1'b1)))) || //bgeu
                         opcode == 7'b110_1111 ? imm32 : ALU_mux;//lw这里没有问题（就是ALU_mux）//jal(j)
 endmodule
+
+     /*
+     always@(read_data1, operand2, ALUControl) begin
+        case(ALUControl)
+            4'b0010: ALU_mux <= read_data1 + operand2;
+            4'b0110: ALU_mux <= read_data1 - operand2;
+            4'b0000: ALU_mux <= read_data1 & operand2;
+            4'b0001: ALU_mux <= read_data1 | operand2;
+        default: ALU_mux <= 32'h00000000;
+        endcase
+     end
+     //slli处理and srli
+     always @(read_data1, operand2) begin
+        if(opcode == 7'b0010011 && funct3 == 3'b001)begin
+            ALU_mux = read_data1 << operand2;
+        end
+        if(opcode == 7'b0010011 && funct3 == 3'b101)begin
+            ALU_mux = read_data1 >> operand2;
+        end
+     end*/
