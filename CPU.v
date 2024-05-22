@@ -23,26 +23,30 @@
 module CPU(
 input clk,
 input reset,
-input[2:0] test_index,
+//input[2:0] test_index,没有必要，控制在io_read_dataP5R1
 input[15:0] io_read_dataP5R1,//开关输入数据,暂时一个开关控制绑两个bit
+input in_button,
+input decision_button,
+input out_button,
 //input ledwrite,//现暂定有button控制开关
-output[7:0] ledF4R2,//拨动开关亮灯
+output[15:0] ledF6K2,//拨动开关亮灯
 output[7:0] seg,
 output[7:0] seg1,
-output[7:0] an,
+output[7:0] an
 //output[31:0] digital_tube,//MemOrIO中的write_data，用来显示十六进制
-output check//测试场景1的011-111结果显示
+//output check//测试场景1的011-111结果显示,并不能这样，应该要传到led模块中再输出
     );
     wire cpu_clk;
     wire cpu_uart_clk;
     //leds
     wire[1:0] ledaddr;
+    wire[15:0] led_input;
     //digital
     wire[31:0] dagital;
     //IOread
     wire[15:0] io_read_data;
     //m_inst
-    reg[31:0] PC;//instruction_address
+    //reg[31:0] PC;//instruction_address
     wire[31:0] Instruction;
     //Controller
     wire[6:0] opcode;
@@ -68,25 +72,34 @@ output check//测试场景1的011-111结果显示
     wire[31:0] ALU_result;
     //MemOrIO
     wire[31:0] mem_addr;//mem_address
-    wire mem_data_out;//data mem输出的数据
+    wire[31:0] mem_data_out;//data mem输出的数据
+    wire[31:0] rdata;
     wire[31:0] write_data;
     wire LEDCtrl;//用于控制LED灯是否会亮 == 1'b1拨动开关led灯才会亮
     wire SwitchCtrl;//用于控制开关输入信息是否有效 == 1'b1才能有效拨动开关
     wire DigitalCtrl;//y用于控制数码管是否会亮
+    wire[15:0] led_data;
     //DMem
     wire mem_data_in;//向data mem写入的数据
 
     assign dagital = write_data;
+    assign led_input = led_data;//当lw和sw时，只要地址正确，就会像led中输入数据
     assign opcode = Instruction[6:0];
+    assign mem_data_in = write_data;
+    assign data_to_reg = (MemRead == 1'b1 || IORead_singal == 1'b1) ? rdata :
+                        (opcode == 7'b0110011 || opcode == 7'b0010011) ? ALU_result :
+                        32'h0000_0000;
+    
+    
     cpuclk Clk(.clk_in1(clk),.clk_out1(cpu_clk),.clk_out2(cpu_uart_clk));
     
     Leds leds(.ledrst(reset),.led_clk(cpu_clk),
             .ledcs(LEDCtrl),.ledaddr(2'b00),
-            .ledwdata(write_data[15:0]),.ledout(ledF4R2));//先暂定2'b00，已设wire ledaddr
+            .ledwdata(led_input),.ledout(ledF6K2));//先暂定2'b00，已设wire ledaddr
                                                           //先暂定是write_data，之后会有register向外的数据
     
     DigitalOut digital_out(.SwitchCtrl(SwitchCtrl),.IOWrite_singal(IOWrite_singal),
-                .clk(clk),.rst(reset),.io_read_dataP5R1(io_read_dataP5R1),
+                .clk(cpu_clk),.rst(reset),.io_read_dataP5R1(io_read_dataP5R1),
                 .digital(write_data),.seg(seg),.seg1(seg1),.an(an));
                 
     IOread io_read(.reset(reset),.ior(IORead_singal),
@@ -102,7 +115,7 @@ output check//测试场景1的011-111结果显示
                         .zero(zero),.ALU_result(ALU_result),
                         .Instruction(Instruction));
     
-    Controller con(.Alu_resultHigh(ALU_result[31:10]),.opcode(opcode),
+    Controller con(.Alu_resultHigh({ALU_result[31:10]}),.opcode(opcode),
                     .Branch(Branch),.MemRead(MemRead),
                     .MemtoReg(MemtoReg),.ALUOp(ALUOp),
                     .MemWrite(MemWrite),.ALUSrc(ALUSrc),
@@ -111,21 +124,22 @@ output check//测试场景1的011-111结果显示
     
     Decoder decoder(.clk(cpu_clk),.reset(reset),.Instruction(Instruction),
                     .RegWrite(RegWrite),.data_to_reg(data_to_reg),
+                    .in_button(in_button),.decision_button(decision_button),.out_button(out_button),
                     .imm32(imm32),.funct3(funct3),.funct7(funct7),
                     .read_data1(read_data1),.read_data2(read_data2));
     
     ALU alu(.read_data1(read_data1),.read_data2(read_data2),
             .imm32(imm32),.ALUOp(ALUOp),.funct3(funct3),
             .funct7(funct7), .ALUSrc(ALUSrc),.opcode(opcode),
-            .ALU_result(ALU_result),.zero(zero),.check(check));
+            .ALU_result(ALU_result),.zero(zero));
     
     MemOrIO mem_or_io(.MemRead(MemRead),.MemWrite(MemWrite),
                     .IORead_singal(IORead_singal),.IOWrite_singal(IOWrite_singal),
                     .addr_in(ALU_result),.addr_out(mem_addr),
                     .mem_read_data(mem_data_out),.io_read_data(io_read_data),
-                    .rdata(data_to_reg),.register_read_data(read_data1),
+                    .rdata(rdata),.register_read_data(read_data2),//sw显示读的是rs2
                     .write_data(write_data),.LEDCtrl(LEDCtrl),
-                    .SwitchCtrl(SwitchCtrl),.DigitalCtrl(DigitalCtrl));
+                    .SwitchCtrl(SwitchCtrl),.DigitalCtrl(DigitalCtrl),.led_data(led_data));
     
     DMem data_mem(.clk(cpu_clk),.MemRead(MemRead),.MemWrite(MemWrite),
                 .addr(mem_addr),.data_in(mem_data_in),.data_out(mem_data_out));
