@@ -21,97 +21,107 @@
 
 
 module DigitalOut(
-input SwitchCtrl,
+//input [21:0] Alu_resultHigh,//新增
+//input SwitchCtrl,
 input IOWrite_singal,
 input clk,
 input rst,
-input[15:0] io_read_dataP5R1, //绑8位端口
-input [31:0] digital, //digital没有绑端口，所以先注掉了
+//input[15:0] io_read_data, //绑8位端口
+input[31:0] digital, //digital没有绑端口，所以先注掉了
+//input open,//新增
 output reg [7:0] seg,//段选，高有效
 output reg [7:0] seg1,
 output reg [7:0] an //位选，低有效
 );
 reg[18:0] divclk_cnt = 0;//分频计数器
 reg divclk = 0;//分频后的时钟
-reg [31:0]digital_tube;
-//reg [31:0]dagital;   //digital暂时赋的值
+reg[31:0] digital_tube;
+reg[31:0] dagital_mem;   //digital暂时赋的值
 reg[3:0] disp_dat;//要显示的数据
 reg[2:0] disp_bit;//要显示的位
-parameter maxcnt = 50000;// 周期：50000*2/100M
-always@(posedge clk)
-begin
-    if (SwitchCtrl) begin
-        digital_tube = {16'b0, io_read_dataP5R1};
-    end else if (!SwitchCtrl && IOWrite_singal) begin
-        digital_tube = digital;
+reg[31:0] digital_mem;
+//reg check;//新增
+parameter maxcnt = 15000;// 周期：50000*2/23M
+
+always@(posedge clk, negedge rst) begin
+    if (rst == 1'b0) begin
+        digital_tube <= 32'h0000_0000;
+        divclk <= 1'b0;
+        divclk_cnt <= 0; // 初始化分频计数器
+        digital_mem <= 32'h0000_0000;
     end else begin
-        digital_tube = 32'b0;
-    end
-    if(divclk_cnt==maxcnt)
-    begin
-        divclk=~divclk;
-        divclk_cnt=0;
-    end
-    else
-    begin
-        divclk_cnt=divclk_cnt+1'b1;
+        if(IOWrite_singal == 1'b1) begin//sw
+            digital_tube <= digital;
+            digital_mem <= digital;
+        end /*else if(SwitchCtrl)begin//lw
+            digital_tube <= {16'b0, io_read_data};
+            digital_mem <= {16'b0, io_read_data};
+        end */else begin
+            digital_tube <= digital_mem;
+        end
+        if(divclk_cnt==maxcnt)begin
+            divclk <= ~divclk;
+            divclk_cnt <= 0;
+        end else begin
+            divclk_cnt <= divclk_cnt+1'b1;
+        end
     end
 end
 always@(posedge divclk) begin
     if(disp_bit >= 7)
-        disp_bit=0;
+        disp_bit <= 0;
      else
-        disp_bit=disp_bit+1'b1;
+        disp_bit <= disp_bit+1'b1;
      case (disp_bit)
         3'b000 :
         begin
             disp_dat=digital_tube[3:0];
-            an=8'b00000001;//显示第一个数码管，高电平有效
+            an <= 8'b00000001;//显示第一个数码管，高电平有效
         end
         3'b001 :
         begin
             disp_dat=digital_tube[7:4];
-            an=8'b00000010;//显示第二个数码管，低电平有效
+            an <= 8'b00000010;//显示第二个数码管，低电平有效
         end
         3'b010 :
         begin
             disp_dat=digital_tube[11:8];
-            an=8'b00000100;//显示第三个数码管，低电平有效
+            an <= 8'b00000100;//显示第三个数码管，低电平有效
         end
         3'b011 :
         begin
             disp_dat=digital_tube[15:12];
-            an=8'b00001000;//显示第四个数码管，低电平有效
+            an <= 8'b00001000;//显示第四个数码管，低电平有效
         end
         3'b100 :
         begin
             disp_dat=digital_tube[19:16];
-            an=8'b00010000;//显示第五个数码管，低电平有效
+            an <= 8'b00010000;//显示第五个数码管，低电平有效
         end
         3'b101 :
         begin
             disp_dat=digital_tube[23:20];
-            an=8'b00100000;//显示第六个数码管，低电平有效
+            an <= 8'b00100000;//显示第六个数码管，低电平有效
         end
         3'b110 :
         begin
             disp_dat=digital_tube[27:24];
-            an=8'b01000000;//显示第七个数码管，低电平有效
+            an <= 8'b01000000;//显示第七个数码管，低电平有效
         end
         3'b111 :
         begin
             disp_dat=digital_tube[31:28];
-            an=8'b10000000;//显示第八个数码管，低电平有效
+            an <= 8'b10000000;//显示第八个数码管，低电平有效
         end
         default:
         begin
             disp_dat=0;
-            an=8'b00000000;
+            an <= 8'b00000000;
         end
     endcase
 end
 always@(disp_dat)
-begin
+    begin
     if(an > 8'b00001000) begin
         case (disp_dat)
         //显示0-F
@@ -156,3 +166,37 @@ begin
     end
 end
 endmodule
+
+/*    if (SwitchCtrl) begin//lw输入时会亮
+        digital_tube <= {16'b0, io_read_dataP5R1};
+//        digital_mem <= {16'b0, io_read_dataP5R1};
+    end else if (!SwitchCtrl && IOWrite_singal) begin//向io输入时会亮sw
+        digital_tube <= digital;
+//        digital_mem <= digital;
+    end// else begin
+//        digital_tube <= digital_mem;
+    end*/
+/*always@(posedge clk, negedge rst)begin
+    if(!rst)begin
+        digital_tube <= 32'b0;
+        check <= 1'b0;
+        dagital_mem <= 32'b0;
+    end else begin
+        if(Alu_resultHigh == 22'h3ffff && check == 1'b0)begin
+            digital_tube <= digital;
+            dagital_mem <= digital;
+            check <= 1'b1;
+        end else if(SwitchCtrl == 1'b1 && check == 1'b0)begin
+            digital_tube <= io_read_dataP5R1;
+            dagital_mem <= 32'b0;
+        end else if(SwitchCtrl == 1'b0 && IOWrite_singal == 1'b1 && check == 1'b1)begin
+            digital_tube <= dagital_mem;
+        end
+    end
+    if(divclk_cnt==maxcnt)begin
+        divclk <= ~divclk;
+        divclk_cnt <= 0;
+    end else begin
+        divclk_cnt <= divclk_cnt+1'b1;
+    end
+end*/

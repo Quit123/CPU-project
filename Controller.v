@@ -35,23 +35,31 @@ module Controller(
     output MemOrIOtoReg, // 1 indicates that data needs to be read from memory or I/O to the register
     output IORead_singal, // 1 indicates I/O read
     output IOWrite_singal // 1 indicates I/O write
-    //type:åˆ¤æ–­æŒ‡ä»¤ç»“æŸåœ°ç‚¹
+    //type:ÅĞ¶ÏÖ¸Áî½áÊøµØµã
     );
-    assign IORead_singal = (opcode == 7'b000_0011 && Alu_resultHigh == 22'h3fffff) ? 1'b1 : 1'b0;
-    assign IOWrite_singal = (opcode == 7'b010_0011 && Alu_resultHigh == 22'h3fffff) ? 1'b1 : 1'b0;//swæ—¶åˆ¤æ–­è¾“å…¥åœ°å€ï¼Œå‘è®¾å¤‡è¾“å…¥ï¼Œæ˜¾ç¤ºæ•°ç ç®¡
+    parameter LW_OP = 7'b000_0011;
+    parameter SW_OP = 7'b010_0011;
+    parameter BR_OP = 7'b110_0011;
+    parameter JAL_OP = 7'b110_1111;
+    parameter JALR_OP = 7'b110_0111;
+    parameter R_TYPE_OP = 7'b011_0011;
+    parameter I_TYPE_OP = 7'b001_0011;
+    parameter HIGH_ADDR = 22'h3fffff;
+    assign IORead_singal = (opcode == LW_OP && Alu_resultHigh == HIGH_ADDR) ? 1'b1 : 1'b0;//lw
+    assign IOWrite_singal = (opcode == SW_OP && Alu_resultHigh == HIGH_ADDR) ? 1'b1 : 1'b0;//swÊ±ÅĞ¶ÏÊäÈëµØÖ·£¬ÏòÉè±¸ÊäÈë£¬ÏÔÊ¾ÊıÂë¹Ü
     assign MemOrIOtoReg = IORead_singal || IOWrite_singal;
     
-    assign Branch = (opcode == 7'b110_0011 || opcode == 7'b110_1111) ? 1'b1 : 1'b0;//æœ€åä¸€ä¸ªjal
-    assign MemWrite = (opcode == 7'b010_0011 && IOWrite_singal == 1'b0) ? 1'b1 : 1'b0;//swæ—¶ä¸º1ï¼Œå¯ä»¥å‘memå­˜
-    assign MemRead = (opcode == 7'b000_0011 && IORead_singal == 1'b0) ? 1'b1 : 1'b0;
-    assign MemtoReg = (opcode == 7'b000_0011) ? 1'b1 : 1'b0;
-    assign RegWrite = (opcode == 7'b011_0011 || opcode == 7'b000_0011 || opcode == 7'b001_0011) ? 1'b1 : 1'b0;//æœ€åä¸€ä¸ªæ—¶IæŒ‡ä»¤
-    assign ALUOp = (opcode == 7'b011_0011 || opcode == 7'b001_0011) ? 2'b10 :  //addã€subã€andã€or
-                   (opcode == 7'b000_0011 || opcode == 7'b010_0011) ? 2'b00 :  //ldã€sw
-                   (opcode == 7'b110_0011) ? 2'b01 : 2'b11;//11æ— æ„ä¹‰  01beq
-    assign ALUSrc = (opcode == 7'b000_0011 || opcode == 7'b001_0011 || opcode == 7'b010_0011 || opcode == 7'b110_1111) ? 1'b1 : 1'b0;//æœ€åä¸€ä¸ªjal
+    assign Branch = (opcode == BR_OP || opcode == JAL_OP || opcode == JALR_OP) ? 1'b1 : 1'b0;//×îºóÒ»¸öjal
+    assign MemWrite = (opcode == SW_OP && IOWrite_singal == 1'b0) ? 1'b1 : 1'b0;//swÊ±Îª1£¬¿ÉÒÔÏòmem´æ
+    assign MemRead = (opcode == LW_OP && IORead_singal == 1'b0) ? 1'b1 : 1'b0;
+    assign MemtoReg = (opcode == LW_OP) ? 1'b1 : 1'b0;
+    assign RegWrite = (opcode == R_TYPE_OP || opcode == LW_OP || opcode == I_TYPE_OP) ? 1'b1 : 1'b0;//×îºóÒ»¸öÊ±IÖ¸Áî
+    assign ALUOp = (opcode == R_TYPE_OP || opcode == I_TYPE_OP) ? 2'b10 :  //add¡¢sub¡¢and¡¢or
+                   (opcode == LW_OP || opcode == SW_OP || opcode == JALR_OP) ? 2'b00 :  //ld¡¢sw
+                   (opcode == BR_OP) ? 2'b01 : 2'b11;//11ÎŞÒâÒå  01beq
+    assign ALUSrc = (opcode == LW_OP || opcode == I_TYPE_OP || opcode == SW_OP || opcode == JAL_OP || opcode == JALR_OP) ? 1'b1 : 1'b0;//×îºóÒ»¸öjal
 endmodule
-            /*7'b001_0111, 7'b011_0111:begin//U aupicã€lui
+            /*7'b001_0111, 7'b011_0111:begin//U aupic¡¢lui
             Branch = 1'b0;
             MemRead = 1'b0;
             MemtoReg = 1'b0;

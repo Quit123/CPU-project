@@ -24,10 +24,13 @@ module MemOrIO(
 //MemOrIO determine:
 //1). The source of r_wdata
 //2). The destination of r_rdata
-    input MemRead, //key-sign -> read memory, from Controllerï¼Œè¯»å‡ºmem
-    input MemWrite, //key-sign -> write memory, from Controllerï¼Œå†™å…¥mem
-    input IORead_singal, //key-sign -> read IO, from Controllerï¼Œå°†æ•°æ®æ˜¾ç¤ºåœ¨è®¾å¤‡ä¸Š(lw)
-    input IOWrite_singal, //key-sign -> write IO, from Controller,å°†æ•°æ®ä¼ å…¥è®¾å¤‡(sw)
+    input button_a,//°´Å¥
+    input button_b,
+    input button_model,
+    input MemRead, //key-sign -> read memory, from Controller£¬¶Á³ömem
+    input MemWrite, //key-sign -> write memory, from Controller£¬Ğ´Èëmem
+    input IORead_singal, //key-sign -> read IO, from Controller£¬½«Êı¾İÏÔÊ¾ÔÚÉè±¸ÉÏ(lw)
+    input IOWrite_singal, //key-sign -> write IO, from Controller,½«Êı¾İ´«ÈëÉè±¸(sw)
     
     input[31:0] addr_in, // from alu_result in ALU
     output[31:0] addr_out, // address to Data-Memory
@@ -38,35 +41,44 @@ module MemOrIO(
     
     input[31:0] register_read_data, // data read from Decoder(register file)
     
-    output [31:0] write_data, // data to memory or I/Oï¼ˆm_wdata, io_wdataï¼‰
-    output LEDCtrl, //æ§åˆ¶LEDä¿¡å·
-    output SwitchCtrl, //æ§åˆ¶å¼€å…³è¾“å…¥ä¿¡æ¯
-    output DigitalCtrl, //æ§åˆ¶æ•°ç ç®¡
-    output[15:0] led_data
+    output [31:0] write_data, // data to memory or I/O£¨m_wdata, io_wdata£©(Õâ¸öĞ´ÈëÊıÂë¹Ü)
+    output LEDCtrl, //¿ØÖÆLEDĞÅºÅ
+    output SwitchCtrl, //¿ØÖÆ¿ª¹ØÊäÈëĞÅÏ¢
+    output DigitalCtrl, //¿ØÖÆÊıÂë¹Ü
+    output[15:0] led_data,
+    output[1:0] ledaddr
     );
-    //æ‰€æœ‰è¾“å…¥ä¿¡å·å…ˆä¼ å…¥registerï¼ˆmemoryæˆ–I/Oè®¾å¤‡ï¼‰
-    //å†ä»registerä¸­è¯»ä¿¡å·ï¼Œä¼ å‡ºï¼ˆè¿™ä¸ªä¿¡å·å¯èƒ½æ˜¯memoryæˆ–æ˜¯I/Oè®¾å¤‡ï¼‰
-    reg data;
-    wire[31:0] WD;
-    assign WD = (MemWrite == 1'b1 || IOWrite_singal == 1'b1) ? register_read_data : 32'hffffffff;
-    assign addr_out = addr_in;//ä¼ å…¥åœ°å€ç­‰äºä¼ å‡ºåœ°å€
-    assign rdata = (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : mem_read_data;//(lw)memå‘register,è¿™é‡Œéœ€è¦å¯¹lbçš„ç±»å‹è¿›
-    assign write_data = WD;//å¥½åƒæ²¡æœ‰å¿…è¦å‰16bitæ˜¯0ï¼Œiooutputä¸ºä»€ä¹ˆä¸€å®šè¦æ˜¯0å‘¢(sw)å‘memæˆ–ioè¾“å…¥ä¿¡æ¯
-    assign LEDCtrl = (IORead_singal == 1'b1 || IOWrite_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)ledçš„æ˜¾ç¤ºè¾“å‡º
-    assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)æ‹¨åŠ¨å¼€å…³è¾“å…¥
-    assign DigitalCtrl = (IORead_singal == 1'b1 || IOWrite_singal == 1'b1) ? 1'b1 : 1'b0;
-    assign led_data = (IORead_singal == 1'b1) ? io_read_data ://å½“lw
-                    (IOWrite_singal == 1'b1) ? WD[15:0] : 16'h0000;//å’Œswæ—¶ï¼Œåªè¦åœ°å€æ­£ç¡®ï¼Œå°±ä¼šåƒledä¸­è¾“å…¥æ•°æ®
+    //ËùÓĞÊäÈëĞÅºÅÏÈ´«Èëregister£¨memory»òI/OÉè±¸£©
+    //ÔÙ´ÓregisterÖĞ¶ÁĞÅºÅ£¬´«³ö£¨Õâ¸öĞÅºÅ¿ÉÄÜÊÇmemory»òÊÇI/OÉè±¸£©
+    wire[31:0] WD;//WBÏòÊıÂë¹ÜºÍmemÖÓÊäÈëÊı¾İ£¬ÇÒ¶¼ÊÇÖ±½ÓÊäÈë£¬memºÍregister¶¼ÊÇÖ±½ÓÊäÈë£¬ÈÃledºÍÊıÂë¹Ü²ÉÓÃÊ±ÖÓÌø±äÑØÊäÈë
+    assign rdata = (IORead_singal && addr_in != 32'hffff_fc74 && addr_in != 32'hffff_fc78 && addr_in != 32'hffff_fc88) ? {16'h0000 ,io_read_data} : //(lw)
+                    (IORead_singal && addr_in == 32'hffff_fc74) ? {31'b0,button_a} : 
+                    (IORead_singal && addr_in == 32'hffff_fc78) ? {31'b0,button_b} :
+                    (IORead_singal && addr_in == 32'hffff_fc88) ? {31'b0,button_model} : mem_read_data;//(lw)memÏòregister,ÕâÀïĞèÒª¶ÔlbµÄÀàĞÍ½ø
+    assign WD = (MemWrite == 1'b1 || IOWrite_singal == 1'b1) ? register_read_data : 32'h0000_0000;//(sw)
+    assign write_data = WD;//(sw)Ïòmem»òioÊäÈëĞÅÏ¢
+    assign led_data = (IOWrite_singal == 1'b1) ? WD[15:0] : 16'h0000;
+    
+    /*assign led_data = (IORead_singal == 1'b1) ? io_read_data ://µ±lw
+                    (IOWrite_singal == 1'b1) ? WD[15:0] : 16'h0000;//ºÍswÊ±£¬Ö»ÒªµØÖ·ÕıÈ·£¬¾Í»áÏñledÖĞÊäÈëÊı¾İ*/
+    assign LEDCtrl = (IOWrite_singal == 1'b1) ? 1'b1 : 1'b0;//(sw)led¿ª¹Ø
+    assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)²¦¶¯¿ª¹ØÊäÈë
+    assign DigitalCtrl = (IOWrite_singal == 1'b1) ? 1'b1 : 1'b0;//£¨sw£©ÊıÂë¹Ü¿ª¹Ø
+    assign addr_out = addr_in;//´«ÈëµØÖ·µÈÓÚ´«³öµØÖ·
+    assign ledaddr = (addr_in == 32'hffff_fc7c) ? 2'b10 :
+                    (addr_in == 32'hffff_fc80) ? 2'b01 :
+                    (addr_in == 32'hffff_fc84) ? 2'b11 :
+                    2'b00;
 endmodule
 /*
     reg data;
-assign addr_out = addr_in;//ä¼ å…¥åœ°å€ç­‰äºä¼ å‡ºåœ°å€
-assign rdata = (MemRead == 1'b1) ? mem_read_data ://(lw)memå‘register,è¿™é‡Œéœ€è¦å¯¹lbçš„ç±»å‹è¿›è¡Œä¿®æ”¹
-               (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)ioå‘å¯„å­˜å™¨
+assign addr_out = addr_in;//´«ÈëµØÖ·µÈÓÚ´«³öµØÖ·
+assign rdata = (MemRead == 1'b1) ? mem_read_data ://(lw)memÏòregister,ÕâÀïĞèÒª¶ÔlbµÄÀàĞÍ½øĞĞĞŞ¸Ä
+               (IORead_singal == 1'b1) ? {16'h0000 ,io_read_data} : 32'h0000_0000;//(lw)ioÏò¼Ä´æÆ÷
 assign write_data = (MemWrite == 1'b1) ? register_read_data ://(sw)
-                    (IOWrite_singal == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//å¥½åƒæ²¡æœ‰å¿…è¦å‰16bitæ˜¯0ï¼Œiooutputä¸ºä»€ä¹ˆä¸€å®šè¦æ˜¯0å‘¢(sw)å‘memæˆ–ioè¾“å…¥ä¿¡æ¯
-assign LEDCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)ledçš„æ˜¾ç¤ºè¾“å‡º
-assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)æ‹¨åŠ¨å¼€å…³è¾“å…¥
+                    (IOWrite_singal == 1'b1) ? {16'h0000, register_read_data[15:0]} : 32'hffffffff;//ºÃÏñÃ»ÓĞ±ØÒªÇ°16bitÊÇ0£¬iooutputÎªÊ²Ã´Ò»¶¨ÒªÊÇ0ÄØ(sw)Ïòmem»òioÊäÈëĞÅÏ¢
+assign LEDCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)ledµÄÏÔÊ¾Êä³ö
+assign SwitchCtrl = (IORead_singal == 1'b1) ? 1'b1 : 1'b0;//(lw)²¦¶¯¿ª¹ØÊäÈë
 assign DigitalCtrl = IORead_singal || IOWrite_singal;
 endmodule
 

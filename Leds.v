@@ -21,10 +21,10 @@
 
 
 module Leds (
-    input			ledrst,		// reset, active high (å¤ä½ä¿¡å·,é«˜ç”µå¹³æœ‰æ•ˆ)//reset
-    input			led_clk,	// clk for led (æ—¶é’Ÿä¿¡å·)//cpu_clk
-    //input			ledwrite,	// led write enable, active high (å†™ä¿¡å·,é«˜ç”µå¹³æœ‰æ•ˆ)//ä¸€ä¸ªæ–°buttonï¼ŒæŒ‰ä¸‹åledå¼€å§‹äº®ï¼Ÿ
-    input			ledcs,		// 1 means the leds are selected as output (ä»memorioæ¥çš„ï¼Œç”±ä½è‡³é«˜ä½å½¢æˆçš„LEDç‰‡é€‰ä¿¡å·)//LEDCtrl
+    input			ledrst,		// reset, active high (¸´Î»ĞÅºÅ,¸ßµçÆ½ÓĞĞ§)//reset
+    input			led_clk,	// clk for led (Ê±ÖÓĞÅºÅ)//cpu_clk
+    //input			ledwrite,	// led write enable, active high (Ğ´ĞÅºÅ,¸ßµçÆ½ÓĞĞ§)//Ò»¸öĞÂbutton£¬°´ÏÂºóled¿ªÊ¼ÁÁ£¿
+    input			ledcs,		// 1 means the leds are selected as output (´ÓmemorioÀ´µÄ£¬ÓÉµÍÖÁ¸ßÎ»ĞÎ³ÉµÄLEDÆ¬Ñ¡ĞÅºÅ)//LEDCtrl
     input	[1:0]	ledaddr,	// 2'b00 means updata the low 8bits of ledout, 2'b10 means updata the high 8 bits of ledout
     input	[15:0]	ledwdata,	// the data (from register/memorio)  waiting for to be writen to the leds of the board
     output	[15:0]	ledout		// the data writen to the leds  of the board
@@ -34,20 +34,35 @@ module Leds (
     assign ledout = ledout_design;
 
     always @ (posedge led_clk or negedge ledrst) begin
-        if (ledrst == 1'b0)
-            ledout_design <= 24'h000000;
+        if (ledrst == 1'b0)begin
+            ledout_design <= 16'h0000;
+        end
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		else if (ledcs == 1'b1) begin
-			if (ledaddr == 2'b00)
+		else if(ledcs == 1'b1) begin
+		    case(ledaddr)
+		      2'b10: ledout_design[15:0] <= {ledwdata[7:0], ledout_design[7:0]};
+		      2'b01: ledout_design[15:0] <= {ledout_design[15:8],ledwdata[7:0]};
+		      2'b11: ledout_design[15:0] <= ledwdata[15:0];
+		      default : ledout_design <= ledout_design;
+		      endcase
+		end else begin
+		    ledout_design <= ledout_design;
+		end
+		/*else if (ledcs == 1'b1) begin
+			if (ledaddr == 2'b00) begin
 				ledout_design <= ledwdata;
-			else if (ledaddr == 2'b10 )
-				ledout_design <= ledwdata;
-			else
-				ledout_design <= ledout_design;
+			end else if (ledaddr == 2'b10 )begin
+            case (ledaddr)
+                2'b00: ledout_design <= ledwdata; // ¸üĞÂµÍ8Î»
+                2'b10: ledout_design <= ledwdata; // ¸üĞÂ¸ß8Î»
+                default: ledout_design <= ledout_design; // ±£³Ö²»±ä
+            endcase
+            end
         end else begin
             ledout_design <= ledout_design;
-        end
-    end
-	
+        end*/
+	end
 endmodule
-
+/*else begin
+            ledout_design <= ledout_design;
+        end*///µ¹ÊıµÚ¶ş¸öend

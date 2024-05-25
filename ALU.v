@@ -33,16 +33,6 @@ output[31:0] ALU_result,
 output zero,
 output check
     );
-    //blt funct3 : 4
-    //bge funct3 : 5
-    //bltu funct3 : 6
-    //bltu funct3 : 7
-    //lw,sw,beq, add, sub, and, or
-    //add->0010
-    //sub->0110
-    //and->0000
-    //or->0001
-    
     //ALU_control
     wire func7;
     wire[3:0] ALUControl;
@@ -51,38 +41,38 @@ output check
     wire bge;
     wire bltu;
     wire bgeu;
-    wire signed [31:0]data1;
-    wire signed [31:0]data2;
+    wire signed [31:0] signed_data1;
+    wire signed [31:0] signed_data2;
     wire [31:0]ALU_mux;
     
     assign func7 = funct7[5];
     assign operand2 = (ALUSrc == 1'b1)? imm32 : read_data2;
     
     //assign zero = (ALU_mux == 32'h0000_0000)? 1'b1: 1'b0;
-    //Rå’Œå®ç”¨æ€§Iå¤„ç†åŒº
-    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b1)) ? 4'b0110 ://01 -> beq 10 -> subï¼ˆåŠ funct7æ˜¯å› ä¸ºéœ€è¦è¯†åˆ«subï¼ŒåŒæ—¶æ²¡æœ‰subiï¼‰
-                        (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000)) ? 4'b0010 ://00 -> load|store 10 -> add(åˆ é™¤æ‰funct7æ˜¯å› ä¸ºæœ‰addiçš„Iç±»å‹ï¼ŒaddæŒ‡ä»¤å¯ä»¥ä¸åˆ¤æ–­7)
+    //RºÍÊµÓÃĞÔI´¦ÀíÇø
+    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b1)) ? 4'b0110 ://01 -> beq 10 -> sub£¨¼Ófunct7ÊÇÒòÎªĞèÒªÊ¶±ğsub£¬Í¬Ê±Ã»ÓĞsubi£©
+                        (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000)) ? 4'b0010 ://00 -> load|store 10 -> add(É¾³ıµôfunct7ÊÇÒòÎªÓĞaddiµÄIÀàĞÍ£¬addÖ¸Áî¿ÉÒÔ²»ÅĞ¶Ï7),sw,lw,jalr(ÒòÎªĞèÒªÓÃµ½read_data1,ËùÒÔ²»ÄÜÏñjÖ±½ÓÓÃimm32£¬»¹ÊÇĞèÒªÔËËãÒ»ÏÂ)
                         (ALUOp == 2'b10 && funct3 == 3'b111) ? 4'b0000 ://and
                         (ALUOp == 2'b10 && funct3 == 3'b110) ? 4'b0001 ://or
                         4'b1111;
-     assign ALU_mux = (ALUControl == 4'b0010) ? read_data1 + operand2 ://ä¸‹é¢å¤„ç†Rã€ä¸€éƒ¨åˆ†Iï¼ŒSï¼Œä¸€éƒ¨åˆ†B(beq)
+     assign ALU_mux = (ALUControl == 4'b0010) ? read_data1 + operand2 ://ÏÂÃæ´¦ÀíR¡¢Ò»²¿·ÖI£¬S£¬Ò»²¿·ÖB(beq)
                     (ALUControl == 4'b0110) ? read_data1 - operand2 :
                     (ALUControl == 4'b0000) ? read_data1 & operand2 :
                     (ALUControl == 4'b0001) ? read_data1 | operand2 :
-                    (opcode == 7'b0010011 && funct3 == 3'b001) ? read_data1 << operand2 ://ä¸‹é¢å¤„ç†slliå’Œsrli
+                    (opcode == 7'b0010011 && funct3 == 3'b001) ? read_data1 << operand2 ://ÏÂÃæ´¦ÀíslliºÍsrli
                     (opcode == 7'b0010011 && funct3 == 3'b101) ? read_data1 >> operand2 :
                     32'h00000000;
      
-     //Bç±»å‹å¤„ç†åŒº
-     assign data1 = $signed(read_data1);
-     assign data2 = $signed(read_data2);
+     //BÀàĞÍ´¦ÀíÇø
+     assign signed_data1 = $signed(read_data1);
+     assign signed_data2 = $signed(read_data2);
      
-     assign blt = (data1 < data2) ? 1'b1 : 1'b0;
-     assign bge = (data1 >= data2) ? 1'b1 : 1'b0;
-     assign bltu = (read_data1 < operand2) ? 1'b1 : 1'b0;
-     assign bgeu = (read_data1 >= operand2) ? 1'b1 : 1'b0;
+     assign blt  = signed_data1 < signed_data2;
+     assign bge  = signed_data1 >= signed_data2;
+     assign bltu = read_data1 < read_data2;
+     assign bgeu = read_data1 >= read_data2;
      
-     assign check = (blt == 1'b1 || bge == 1'b1 || bltu == 1'b1 || bgeu == 1'b1) ? 1'b1 : 1'b0;
+     assign check = blt || bge || bltu || bgeu;
      
      assign zero = ((ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) || //beq
                 (funct3 == 3'b001 && ALU_mux != 32'h0000_0000) || //bne
@@ -90,16 +80,24 @@ output check
                 (funct3 == 3'b101 && bge == 1'b1) || //bge
                 (funct3 == 3'b110 && bltu == 1'b1) || //bltu
                 (funct3 == 3'b111 && bgeu == 1'b1)))) ||//bgeu
-                opcode == 7'b110_1111 ? 1'b1 : 1'b0;//jal(j)
+                opcode == 7'b110_1111 || opcode == 7'b110_0111 ? 1'b1 : 1'b0;//jal(j),jalr
      assign ALU_result = ((ALUOp == 2'b01 && ((funct3 == 3'b000 && ALU_mux == 32'h0000_0000) ||//beq
                         (funct3 == 3'b001 && ALU_mux != 32'h0000_0000) || //bne
                         (funct3 == 3'b100 && blt == 1'b1) || //blt
                         (funct3 == 3'b101 && bge == 1'b1) || //bge
                         (funct3 == 3'b110 && bltu == 1'b1) || //bltu
                         (funct3 == 3'b111 && bgeu == 1'b1)))) || //bgeu
-                        opcode == 7'b110_1111 ? imm32 : ALU_mux;//lwè¿™é‡Œæ²¡æœ‰é—®é¢˜ï¼ˆå°±æ˜¯ALU_muxï¼‰//jal(j)
+                        opcode == 7'b110_1111 ? imm32 : ALU_mux;//lwÕâÀïÃ»ÓĞÎÊÌâ£¨¾ÍÊÇALU_mux£©//jal(j) imm32,jalr ALU_mux
 endmodule
-
+    //blt funct3 : 4
+//bge funct3 : 5
+//bltu funct3 : 6
+//bltu funct3 : 7
+//lw,sw,beq, add, sub, and, or
+//add->0010
+//sub->0110
+//and->0000
+//or->0001
      /*
      always@(read_data1, operand2, ALUControl) begin
         case(ALUControl)
@@ -110,7 +108,7 @@ endmodule
         default: ALU_mux <= 32'h00000000;
         endcase
      end
-     //slliå¤„ç†and srli
+     //slli´¦Àíand srli
      always @(read_data1, operand2) begin
         if(opcode == 7'b0010011 && funct3 == 3'b001)begin
             ALU_mux = read_data1 << operand2;

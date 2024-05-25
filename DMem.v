@@ -25,8 +25,8 @@ input clk,
 input MemRead,//lw
 input MemWrite,//sw
 input[31:0]addr,
-input[31:0]data_in,//Data in,å†™å…¥çš„æ•°æ®
-output[31:0]data_out);//Data out,è¯»å‡ºçš„æ•°æ®
+input[31:0]data_in,//Data in,Ğ´ÈëµÄÊı¾İ
+output[31:0]data_out);//Data out,¶Á³öµÄÊı¾İ
 wire clock;
 assign clock = !clk; 
 RAM udram(.clka(clock),.wea(MemWrite),.addra(addr[13:0]),.dina(data_in),.douta(data_out));
