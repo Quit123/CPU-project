@@ -76,11 +76,13 @@ module Decoder(
     assign load_data = (opcode == 7'b000_0011 && funct3 == 3'b100) ? {24'h00_0000,data_to_reg[7:0]} :  //lbu 读取前8位，用0拓展
                         (opcode == 7'b000_0011 && funct3 == 3'b000) ? {{24{data_to_reg[7]}},data_to_reg[7:0]} ://lb 读取前8位，符号拓展
                         (opcode == JAL_OP) ? next_PC_plus_4 : data_to_reg;//lw和R、I-type
-    
+    initial begin
+        for (i=0;i<32;i=i+1)register[i] <= 0;
+    end
     always@(posedge clk, negedge reset)begin
         if(reset == 1'b0) begin              // 初始化寄存器组
             for(i=0;i<32;i=i+1) register[i] <= 32'h0000_0000;
-        end else if(RegWrite == 1'b1) begin
+        end else if(RegWrite == 1'b1 && return_address != 5'b00000) begin
             register[return_address] <= load_data;
         end else if(opcode == JAL_OP && return_address == 5'b00001)begin
             register[return_address] <= load_data;

@@ -90,7 +90,7 @@ output[7:0] an
     wire DigitalCtrl;//y用于控制数码管是否会亮
     wire[15:0] led_data;
     //DMem
-    wire mem_data_in;//向data mem写入的数据
+    wire[31:0] mem_data_in;//向data mem写入的数据1
 
     assign dagital = write_data;
     assign led_input = led_data;//当lw和sw时，只要地址正确，就会像led中输入数据
