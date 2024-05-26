@@ -34,7 +34,6 @@ output zero,
 output check
     );
     //ALU_control
-    wire func7;
     wire[3:0] ALUControl;
     wire[31:0] operand2;
     wire blt;
@@ -45,12 +44,11 @@ output check
     wire signed [31:0] signed_data2;
     wire [31:0]ALU_mux;
     
-    assign func7 = funct7[5];
     assign operand2 = (ALUSrc == 1'b1)? imm32 : read_data2;
     
     //assign zero = (ALU_mux == 32'h0000_0000)? 1'b1: 1'b0;
     //R和实用性I处理区
-    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && func7 == 1'b1)) ? 4'b0110 ://01 -> beq 10 -> sub（加funct7是因为需要识别sub，同时没有subi）
+    assign ALUControl = (ALUOp == 2'b01 || (ALUOp == 2'b10 && funct3 == 3'b000 && funct7 == 7'b010_0000)) ? 4'b0110 ://01 -> beq 10 -> sub（加funct7是因为需要识别sub，同时没有subi）
                         (ALUOp == 2'b00 || (ALUOp == 2'b10 && funct3 == 3'b000)) ? 4'b0010 ://00 -> load|store 10 -> add(删除掉funct7是因为有addi的I类型，add指令可以不判断7),sw,lw,jalr(因为需要用到read_data1,所以不能像j直接用imm32，还是需要运算一下)
                         (ALUOp == 2'b10 && funct3 == 3'b111) ? 4'b0000 ://and
                         (ALUOp == 2'b10 && funct3 == 3'b110) ? 4'b0001 ://or
