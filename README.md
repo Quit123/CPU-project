@@ -2,6 +2,11 @@
 
 ---
 
+**Project Score:**
+<img width="575" alt="image" src="https://github.com/user-attachments/assets/c8143937-430e-49ef-af3a-6c05394aa11c">
+
+---
+
 **Grading Criteria（1）:**
 
 1. The grading will be based on code standards (structured design, variable naming, coding standards, comments), documentation, and functional acceptance demonstration.
