@@ -34,8 +34,6 @@
 6. **Supplementary Note:**
    - If board-level testing cannot be performed, the project’s total score will be adjusted to (0.3 ~ 0.5) times the original score, depending on the situation.
 
-Here is the formal English translation of the provided text:
-
 ---
 
 **Grading Criteria (2):**
@@ -60,10 +58,6 @@ Here is the formal English translation of the provided text:
 
 ---
 
-Here is the formal English translation of the provided use case descriptions:
-
----
-
 **Scenario 1: Use Case Descriptions**
 
 **Use Case ID:**
@@ -82,9 +76,6 @@ Here is the formal English translation of the provided use case descriptions:
 - **3'b110**: Use the `bltu` instruction to compare test number `a` and test number `b` (from use cases **3'b001** and **3'b010**). If the condition is met, light up the LED; if the condition is not met, the LED remains off.
 
 - **3'b111**: Use the `bgeu` instruction to compare test number `a` and test number `b` (from use cases **3'b001** and **3'b010**). If the condition is met, light up the LED; if the condition is not met, the LED remains off.
-
----
-Here is the formal English translation of the provided use case descriptions:
 
 ---
 
