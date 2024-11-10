@@ -1,4 +1,4 @@
-# CPU-project
+# 📺CPU-project
 
 ---
 
